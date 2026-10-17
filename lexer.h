@@ -10,7 +10,7 @@ enum Token {
   tok_number = -5,
 };
 
-char *IdentifierStr;
-double NumVal;
+char *getIdentifierStr();
+double getNumVal();
 
 int gettok();

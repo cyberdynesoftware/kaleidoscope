@@ -4,6 +4,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *IdentifierStr;
+double NumVal;
+
+char *getIdentifierStr() {
+  return IdentifierStr;
+}
+
+double getNumVal() {
+  return NumVal;
+}
+
 int gettok() {
   int LastChar = ' ';
 
