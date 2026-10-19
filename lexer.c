@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+int LastChar = ' ';
 char *IdentifierStr;
 double NumVal;
 
@@ -16,7 +17,7 @@ double getNumVal() {
 }
 
 int gettok() {
-  int LastChar = ' ';
+  // printf("=gettok=\n");
 
   while (isspace(LastChar)) {
     LastChar = getchar();
@@ -39,13 +40,17 @@ int gettok() {
 
     if (strcmp(IdentifierStr, "def") == 0) {
       free(IdentifierStr);
+      // printf("=TOKEN= def\n");
       return tok_def;
     }
     if (strcmp(IdentifierStr, "extern") == 0) {
       free(IdentifierStr);
+      // printf("=TOKEN= extern\n");
       return tok_extern;
     }
 
+    // printf("=TOKEN= %s\n", getIdentifierStr());
+    // printf("=LastChar= i %i - '%c'\n", LastChar, LastChar);
     return tok_identifier;
   }
 
@@ -55,7 +60,7 @@ int gettok() {
 
     for (int i = 1;; i++) {
       LastChar = getchar();
-      if (isdigit(LastChar)) {
+      if (isdigit(LastChar) || LastChar == '.') {
         IdentifierStr[i] = LastChar;
       } else {
         IdentifierStr[i] = '\0';
@@ -65,6 +70,7 @@ int gettok() {
 
     NumVal = strtod(IdentifierStr, 0);
     free(IdentifierStr);
+    // printf("=TOKEN= %f\n", NumVal);
     return tok_number;
   }
 
@@ -79,10 +85,13 @@ int gettok() {
   }
 
   if (LastChar == EOF) {
+    // printf("=TOKEN= EOF\n");
     return tok_eof;
   }
 
   int result = LastChar;
   LastChar = getchar();
+  // printf("=TOKEN= %c\n", result);
+  // printf("=LastChar= i %i - '%c'\n", LastChar, LastChar);
   return result;
 }

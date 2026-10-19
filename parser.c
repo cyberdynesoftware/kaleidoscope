@@ -69,7 +69,9 @@ struct ExprAST *ParseIdentifierExpr() {
         return NULL;
       }
       if (CurTok == ')') break;
-      if (CurTok != ',') return LogError("Expected ')' or ',' in argument list");
+      if (CurTok != ',')
+        return LogError(
+            "ParseIdentifierExpr: Expected ')' or ',' in argument list");
       getNextToken();
     }
   }
@@ -148,11 +150,17 @@ struct ExprAST *ParseExpression() {
 }
 
 struct PrototypeAST *ParsePrototype() {
+  // printf("=proto=\n");
   if (CurTok != tok_identifier) {
     return LogErrorP("Expected function name in prototype");
   }
   char *FnName = getIdentifierStr();
+  // printf("=INFO= i %i - '%c'\n", CurTok, CurTok);
+  // printf("=INFO= s %s\n", getIdentifierStr());
   getNextToken();
+  // printf("=proto next token=\n");
+  // printf("=INFO= i %i - '%c'\n", CurTok, CurTok);
+  // printf("=INFO= s %s\n", getIdentifierStr());
 
   if (CurTok != '(') {
     return LogErrorP("Expected '(' in prototype");
@@ -229,7 +237,7 @@ void Driver() {
     switch (CurTok) {
     case tok_eof:
       return;
-    case ':':
+    case ';':
       getNextToken();
       break;
     case tok_def:
