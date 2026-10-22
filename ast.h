@@ -1,4 +1,9 @@
+#ifndef _AST_H_
+#define _AST_H_
+
 #include "list.h"
+#include <llvm-c/Core.h>
+#include <llvm-c/Types.h>
 
 typedef enum ExprASTType { Number, Variable, Binary, Call } exprAST_t;
 
@@ -29,3 +34,8 @@ struct FunctionAST {
 struct ExprAST *newExprAST();
 struct PrototypeAST *newPrototypeAST(char *name, struct list *args);
 struct FunctionAST *newFunctionAST(struct PrototypeAST *proto, struct ExprAST *body);
+
+LLVMValueRef codegen(struct ExprAST *ast);
+void destroy(void);
+
+#endif
