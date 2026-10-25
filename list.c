@@ -4,7 +4,7 @@
 
 int size(struct list *l) {
   int result = 0;
-  while (l->next != NULL) {
+  while (l != NULL) {
     result++;
     l = l->next;
   }
@@ -31,7 +31,7 @@ struct list *list_append_value(struct list *l, void *v) {
   return l;
 }
 
-struct list *new_map_element(const char *key, void *val) {
+struct list *new_map_element(char *key, void *val) {
   struct list *value = malloc(sizeof(struct list));
   value->value = val;
   value->next = NULL;
@@ -42,7 +42,7 @@ struct list *new_map_element(const char *key, void *val) {
   return result;
 }
 
-struct list *map_insert(struct list *map, const char *key, void *val) {
+struct list *map_insert(struct list *map, char *key, void *val) {
   last_element(map)->next = new_map_element(key, val);
   return map;
 }

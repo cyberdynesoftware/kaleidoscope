@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <llvm-c/Core.h>
 #include <string.h>
+#include <stdio.h>
 
 struct ExprAST *newExprAST() {
   return malloc(sizeof(struct ExprAST));
@@ -32,6 +33,14 @@ LLVMContextRef context = NULL;
 LLVMBuilderRef builder = NULL;
 LLVMModuleRef module = NULL;
 struct list *NamedValues = NULL;
+
+void init() {
+  if (context == NULL) {
+    context = LLVMContextCreate();
+    builder = LLVMCreateBuilderInContext(context);
+    module = LLVMModuleCreateWithNameInContext("foo", context);
+  }
+}
 
 LLVMValueRef Number_codegen(struct ExprAST *ast) {
   return LLVMConstReal(LLVMDoubleTypeInContext(context), ast->Val);
@@ -91,12 +100,6 @@ LLVMValueRef Call_codegen(struct ExprAST * ast) {
 }
 
 LLVMValueRef codegen(struct ExprAST *ast) {
-  if (context == NULL) {
-    context = LLVMContextCreate();
-    builder = LLVMCreateBuilderInContext(context);
-    module = LLVMModuleCreateWithNameInContext("foo", context);
-  }
-
   switch (ast->Type) {
   case Number:
     return Number_codegen(ast);
@@ -124,13 +127,23 @@ LLVMValueRef Proto_codegen(struct PrototypeAST *ast) {
   if (LLVMCountParams(F) > 0) {
     LLVMValueRef param = LLVMGetFirstParam(F);
     struct list *e = ast->Args;
-    do {
-      LLVMSetValueName2(param, e->value, strlen(e->value));
+    LLVMSetValueName2(param, e->value, strlen(e->value));
+    while (param != LLVMGetLastParam(F)) {
       e = e->next;
       param = LLVMGetNextParam(param);
-    } while (param != LLVMGetLastParam(F));
+      LLVMSetValueName2(param, e->value, strlen(e->value));
+    }
   }
   return F;
+}
+
+char *param_name(LLVMValueRef param) {
+  size_t param_name_length;
+  const char *raw_param_name = LLVMGetValueName2(param, &param_name_length);
+  char *param_name_copy = malloc(param_name_length + 1);
+  strncpy(param_name_copy, raw_param_name, param_name_length);
+  param_name_copy[param_name_length] = '\0';
+  return param_name_copy;
 }
 
 LLVMValueRef Function_codegen(struct FunctionAST *ast) {
@@ -146,18 +159,17 @@ LLVMValueRef Function_codegen(struct FunctionAST *ast) {
   }
   LLVMBasicBlockRef BB = LLVMAppendBasicBlockInContext(context, TheFunction, "entry");
   LLVMPositionBuilderAtEnd(builder, BB);
+
   if (NamedValues != NULL) {
     free(NamedValues);
     NamedValues = NULL;
   }
   if (LLVMCountParams(TheFunction) > 0) {
     LLVMValueRef param = LLVMGetFirstParam(TheFunction);
-    size_t param_name_length;
-    NamedValues = new_map_element(LLVMGetValueName2(param, &param_name_length), param);
-    param = LLVMGetNextParam(param);
+    NamedValues = new_map_element(param_name(param), param);
     while (param != LLVMGetLastParam(TheFunction)) {
-      map_insert(NamedValues, LLVMGetValueName2(param, &param_name_length), param);
       param = LLVMGetNextParam(param);
+      map_insert(NamedValues, param_name(param), param);
     }
   }
   LLVMValueRef RetVal = codegen(ast->Body);

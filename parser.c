@@ -224,22 +224,34 @@ void HandleDefinition() {
 }
 
 void HandleExtern() {
-  if (ParseExtern()) {
+  struct PrototypeAST *ProtoAST = ParseExtern();
+  if (ProtoAST) {
     fprintf(stdout, "Parsed an extern.\n");
+    LLVMValueRef FnIR = Proto_codegen(ProtoAST);
+    if (FnIR) {
+      printf("%s\n", LLVMPrintValueToString(FnIR));
+    }
   } else {
     getNextToken();
   }
 }
 
 void HandleTopLevelExpression() {
-  if (ParseTopLevelExpr()) {
+  struct FunctionAST *FnAST = ParseTopLevelExpr();
+  if (FnAST) {
     fprintf(stdout, "Parsed a top-level expr.\n");
+    LLVMValueRef FnIR = Function_codegen(FnAST);
+    if (FnIR) {
+      printf("%s\n", LLVMPrintValueToString(FnIR));
+      LLVMDeleteFunction(FnIR);
+    }
   } else {
     getNextToken();
   }
 }
 
 void Driver() {
+  init();
   while (1) {
     fprintf(stdout, "kal> ");
     switch (CurTok) {
@@ -259,4 +271,5 @@ void Driver() {
       break;
     }
   }
+  destroy();
 }
