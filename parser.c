@@ -1,6 +1,9 @@
 #include "parser.h"
+#include "ast.h"
 #include "lexer.h"
 #include <ctype.h>
+#include <llvm-c/Core.h>
+#include <llvm-c/Types.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -208,8 +211,13 @@ struct FunctionAST *ParseTopLevelExpr() {
 }
 
 void HandleDefinition() {
-  if (ParseDefinition()) {
+  struct FunctionAST *FnAST = ParseDefinition();
+  if (FnAST) {
     fprintf(stdout, "Parsed a function definition.\n");
+    LLVMValueRef FnIR = Function_codegen(FnAST);
+    if (FnIR) {
+      printf("%s\n", LLVMPrintValueToString(FnIR));
+    }
   } else {
     getNextToken();
   }

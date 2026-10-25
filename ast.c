@@ -3,6 +3,7 @@
 #include <llvm-c/Types.h>
 #include <stdlib.h>
 #include <llvm-c/Core.h>
+#include <string.h>
 
 struct ExprAST *newExprAST() {
   return malloc(sizeof(struct ExprAST));
@@ -108,6 +109,64 @@ LLVMValueRef codegen(struct ExprAST *ast) {
   default:
     return NULL;
   }
+}
+
+LLVMValueRef Proto_codegen(struct PrototypeAST *ast) {
+  int args_size = size(ast->Args);
+  LLVMTypeRef *Doubles = malloc(sizeof(LLVMTypeRef) * args_size);
+  for (int i = 0; i < args_size; i++) {
+    Doubles[i] = LLVMDoubleTypeInContext(context);
+  }
+  LLVMTypeRef FT =
+      LLVMFunctionType(LLVMDoubleTypeInContext(context), Doubles, args_size, 0);
+  LLVMValueRef F = LLVMAddFunction(module, ast->Name, FT);
+
+  if (LLVMCountParams(F) > 0) {
+    LLVMValueRef param = LLVMGetFirstParam(F);
+    struct list *e = ast->Args;
+    do {
+      LLVMSetValueName2(param, e->value, strlen(e->value));
+      e = e->next;
+      param = LLVMGetNextParam(param);
+    } while (param != LLVMGetLastParam(F));
+  }
+  return F;
+}
+
+LLVMValueRef Function_codegen(struct FunctionAST *ast) {
+  LLVMValueRef TheFunction = LLVMGetNamedFunction(module, ast->Proto->Name);
+  if (!TheFunction) {
+    TheFunction = Proto_codegen(ast->Proto);
+  }
+  if (!TheFunction) {
+    return NULL;
+  }
+  if (LLVMCountBasicBlocks(TheFunction) > 0) {
+    return LogErrorV("Function cannot be redefined.");
+  }
+  LLVMBasicBlockRef BB = LLVMAppendBasicBlockInContext(context, TheFunction, "entry");
+  LLVMPositionBuilderAtEnd(builder, BB);
+  if (NamedValues != NULL) {
+    free(NamedValues);
+    NamedValues = NULL;
+  }
+  if (LLVMCountParams(TheFunction) > 0) {
+    LLVMValueRef param = LLVMGetFirstParam(TheFunction);
+    size_t param_name_length;
+    NamedValues = new_map_element(LLVMGetValueName2(param, &param_name_length), param);
+    param = LLVMGetNextParam(param);
+    while (param != LLVMGetLastParam(TheFunction)) {
+      map_insert(NamedValues, LLVMGetValueName2(param, &param_name_length), param);
+      param = LLVMGetNextParam(param);
+    }
+  }
+  LLVMValueRef RetVal = codegen(ast->Body);
+  if (RetVal) {
+    LLVMBuildRet(builder, RetVal);
+    return TheFunction;
+  }
+  LLVMDeleteFunction(TheFunction);
+  return NULL;
 }
 
 void destroy() {

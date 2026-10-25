@@ -36,6 +36,9 @@ struct PrototypeAST *newPrototypeAST(char *name, struct list *args);
 struct FunctionAST *newFunctionAST(struct PrototypeAST *proto, struct ExprAST *body);
 
 LLVMValueRef codegen(struct ExprAST *ast);
+LLVMValueRef Proto_codegen(struct PrototypeAST *ast);
+LLVMValueRef Function_codegen(struct FunctionAST *ast);
+
 void destroy(void);
 
 #endif
