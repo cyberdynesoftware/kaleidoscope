@@ -43,9 +43,8 @@ struct ExprAST *ParseParenExpr() {
 }
 
 struct ExprAST *ParseIdentifierExpr() {
-  // char *IdName = malloc(strlen(IdentifierStr) + 1);
-  // strcpy(IdName, IdentifierStr);
-  char *IdName = getIdentifierStr();
+  char *IdName = malloc(strlen(getIdentifierStr()) + 1);
+  strcpy(IdName, getIdentifierStr());
 
   getNextToken();
   
@@ -82,7 +81,7 @@ struct ExprAST *ParseIdentifierExpr() {
 
   struct ExprAST *Result = newExprAST();
   Result->Type = Call;
-  Result->Name = IdName;
+  Result->Callee = IdName;
   Result->Args = Args;
   return Result;
 }
@@ -157,13 +156,9 @@ struct PrototypeAST *ParsePrototype() {
   if (CurTok != tok_identifier) {
     return LogErrorP("Expected function name in prototype");
   }
-  char *FnName = getIdentifierStr();
-  // printf("=INFO= i %i - '%c'\n", CurTok, CurTok);
-  // printf("=INFO= s %s\n", getIdentifierStr());
+  char *FnName = malloc(strlen(getIdentifierStr()) + 1);
+  strcpy(FnName, getIdentifierStr());
   getNextToken();
-  // printf("=proto next token=\n");
-  // printf("=INFO= i %i - '%c'\n", CurTok, CurTok);
-  // printf("=INFO= s %s\n", getIdentifierStr());
 
   if (CurTok != '(') {
     return LogErrorP("Expected '(' in prototype");

@@ -78,6 +78,7 @@ LLVMValueRef Binary_codegen(struct ExprAST *ast) {
 LLVMValueRef Call_codegen(struct ExprAST * ast) {
   LLVMValueRef CalleeF = LLVMGetNamedFunction(module, ast->Callee);
   if (!CalleeF) {
+    // printf("Looking up %s failed!\n", ast->Callee);
     return LogErrorV("Unknown function referenced");
   }
   int args_size = size(ast->Args);
