@@ -246,7 +246,7 @@ void HandleTopLevelExpression() {
 }
 
 void Driver() {
-  init();
+  InitializeModule();
   while (1) {
     fprintf(stdout, "kal> ");
     switch (CurTok) {
@@ -266,5 +266,5 @@ void Driver() {
       break;
     }
   }
-  destroy();
+  DestroyModule();
 }

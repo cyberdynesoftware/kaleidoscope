@@ -39,7 +39,7 @@ LLVMValueRef codegen(struct ExprAST *ast);
 LLVMValueRef Proto_codegen(struct PrototypeAST *ast);
 LLVMValueRef Function_codegen(struct FunctionAST *ast);
 
-void init(void);
-void destroy(void);
+void InitializeModule(void);
+void DestroyModule(void);
 
 #endif

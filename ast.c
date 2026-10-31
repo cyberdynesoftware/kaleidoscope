@@ -5,6 +5,7 @@
 #include <llvm-c/Core.h>
 #include <string.h>
 #include <stdio.h>
+#include "LLVMOptimizationPasses.h"
 
 struct ExprAST *newExprAST() {
   return malloc(sizeof(struct ExprAST));
@@ -32,13 +33,29 @@ LLVMValueRef LogErrorV(char *Str) {
 LLVMContextRef context = NULL; 
 LLVMBuilderRef builder = NULL;
 LLVMModuleRef module = NULL;
+LLVMPassManagerRef FPM = NULL; 
 struct list *NamedValues = NULL;
 
-void init() {
-  if (context == NULL) {
-    context = LLVMContextCreate();
-    builder = LLVMCreateBuilderInContext(context);
-    module = LLVMModuleCreateWithNameInContext("foo", context);
+void InitializeModule() {
+  context = LLVMContextCreate();
+  builder = LLVMCreateBuilderInContext(context);
+  module = LLVMModuleCreateWithNameInContext("Kaleidoscope", context);
+  // LLVMSetDataLayout(module, const char *DataLayoutStr);
+  // FPM = LLVMCreateFunctionPassManagerForModule(module);
+  // LLVMInitializeFunctionPassManager(FPM);
+  InitializeManagers(context);
+}
+
+void DestroyModule() {
+  if (context != NULL) {
+    LLVMContextDispose(context);
+    context = NULL;
+    LLVMDisposeBuilder(builder);
+    builder = NULL;
+    LLVMDisposeModule(module);
+    module = NULL;
+    LLVMDisposePassManager(FPM);
+    FPM = NULL;
   }
 }
 
@@ -176,19 +193,14 @@ LLVMValueRef Function_codegen(struct FunctionAST *ast) {
   LLVMValueRef RetVal = codegen(ast->Body);
   if (RetVal) {
     LLVMBuildRet(builder, RetVal);
+
+    // int optim = LLVMRunFunctionPassManager(FPM, TheFunction);
+    // LLVMFinalizeFunctionPassManager(FPM);
+    // printf("optimized? %i\n", optim);
+    RunFPM(TheFunction);
+
     return TheFunction;
   }
   LLVMDeleteFunction(TheFunction);
   return NULL;
-}
-
-void destroy() {
-  if (context != NULL) {
-    LLVMContextDispose(context);
-    context = NULL;
-    LLVMDisposeBuilder(builder);
-    builder = NULL;
-    LLVMDisposeModule(module);
-    module = NULL;
-  }
 }
